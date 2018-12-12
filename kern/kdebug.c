@@ -180,6 +180,31 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	//	which one.
 	// Your code here.
 
+    if (lfun <= rfun) {
+        stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
+        if (lline > rline)
+            return -1;
+    } else {
+
+        int idx;
+        for (idx = lline; idx <= rline; ++idx)
+            if (stabs[idx].n_type == N_SLINE) {
+                uintptr_t stab_addr = stabs[idx].n_value;
+                if (stab_addr == addr) {
+                    lline = idx;
+                    break;
+                } 
+				else if (stab_addr > addr) {
+                    lline = idx - 1;
+                    break;
+                }
+            }
+        if (idx > rline)
+            return -1;
+    }
+
+    info->eip_line = stabs[lline].n_desc;
+
 
 	// Search backwards from the line number for the relevant filename
 	// stab.
